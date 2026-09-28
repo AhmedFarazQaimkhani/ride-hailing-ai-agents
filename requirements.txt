@@ -1,0 +1,21 @@
+# Ride-Hailing Driver Co-Pilot — AI Agents
+# Python 3.11+
+
+# Core
+pydantic>=2.5.0
+python-dotenv>=1.0.0
+
+# Optional: LLM-backed explanations (Explainable Coach uses OpenAI when key is set)
+openai>=1.0.0
+
+# Optional: for future RL/forecasting (uncomment when needed)
+# numpy>=1.24.0
+# scikit-learn>=1.3.0
+# torch>=2.0.0  # for RL / demand models
+
+# CLI / demo
+rich>=13.0.0
+
+# Web UI (LinkedIn demo)
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Driver Co-Pilot — AI Agents for Ride-Hailing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0c0f14;
+      --surface: #151922;
+      --surface2: #1c2129;
+      --border: #2a3140;
+      --text: #e6e9ef;
+      --text-muted: #8b92a3;
+      --accent: #f0b429;
+      --accent-dim: #c49420;
+      --success: #6bcf7f;
+      --warn: #e8a838;
+      --danger: #e85d5d;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --font: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 2.5rem 0 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero h1 {
+      font-size: clamp(1.75rem, 4vw, 2.25rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.35rem;
+    }
+    .hero .tagline {
+      color: var(--text-muted);
+      font-size: 1rem;
+      font-weight: 500;
+    }
+    .hero .badge {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.35rem 0.75rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    /* Scenario selector */
+    .scenarios {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      padding: 1.25rem 0;
+    }
+    .scenarios button {
+      font-family: var(--font);
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+    .scenarios button:hover {
+      background: var(--surface2);
+      border-color: var(--accent-dim);
+      color: var(--accent);
+    }
+    .scenarios button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+    }
+
+    /* Context strip */
+    .context-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem 1.5rem;
+      padding: 1rem 1.25rem;
+      background: var(--surface);
+      border-radius: var(--radius);
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+    }
+    .context-strip .item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+    }
+    .context-strip .label { color: var(--text-muted); }
+    .context-strip .value { font-weight: 600; font-family: var(--font-mono); }
+    .context-strip .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+    .context-strip .dot.idle { background: var(--warn); }
+    .context-strip .dot.on-ride { background: var(--success); }
+
+    /* Recommendations */
+    .section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .card:hover { border-color: var(--accent-dim); box-shadow: 0 0 0 1px var(--accent-dim); }
+    .card-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .card .agent-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      background: var(--surface2);
+      color: var(--accent);
+      font-family: var(--font-mono);
+    }
+    .card .type-badge {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: capitalize;
+    }
+    .card .confidence {
+      margin-left: auto;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent);
+      font-family: var(--font-mono);
+    }
+    .card h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      letter-spacing: -0.01em;
+    }
+    .card .description {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 0.75rem;
+    }
+    .card .explanation {
+      font-size: 0.9rem;
+      padding: 0.75rem 1rem;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      border-left: 3px solid var(--accent);
+      color: var(--text);
+    }
+    .card .confidence-bar {
+      height: 4px;
+      border-radius: 2px;
+      background: var(--surface2);
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    .card .confidence-bar .fill {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: var(--text-muted);
+      font-size: 1rem;
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+    }
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+    }
+    .loading::after {
+      content: "";
+      display: inline-block;
+      width: 20px; height: 20px;
+      margin-left: 0.5rem;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    footer {
+      margin-top: 2.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* All 7 ideas strip */
+    .agents-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .agents-strip .agent-pill {
+      font-size: 0.8rem;
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+      background: var(--surface2);
+      color: var(--text-muted);
+      border: 1px solid transparent;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .agents-strip .agent-pill.active {
+      color: var(--accent);
+      border-color: var(--accent-dim);
+      background: rgba(240, 180, 41, 0.08);
+    }
+    .agents-strip .agent-pill .name { font-weight: 600; }
+    .agents-strip .agent-pill .hint { font-size: 0.7rem; opacity: 0.85; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <h1>Driver Co-Pilot</h1>
+      <p class="tagline">AI agents for ride-hailing drivers — earn more, stress less.</p>
+      <span class="badge">7 agents · Demand · Idle-time · Earnings · Parking · Fatigue · Multi-app · Explainable</span>
+    </header>
+
+    <div class="scenarios" role="tablist" id="scenarios"></div>
+
+    <div id="context-strip" class="context-strip"></div>
+
+    <h2 class="section-title">All 7 ideas (active in this view)</h2>
+    <div id="agents-strip" class="agents-strip"></div>
+
+    <h2 class="section-title">Recommendations</h2>
+    <div id="cards" class="cards">
+      <div class="loading">Loading</div>
+    </div>
+
+    <footer>
+      Built with multi-agent AI · Demand anticipation, idle-time optimization, earnings strategy, parking safety, fatigue monitoring, multi-app arbitrage, explainable coach
+    </footer>
+  </div>
+
+  <script>
+    const API = ""; // same origin
+    const cardsEl = document.getElementById("cards");
+    const contextStripEl = document.getElementById("context-strip");
+    const scenariosEl = document.getElementById("scenarios");
+    const agentsStripEl = document.getElementById("agents-strip");
+
+    const AGENT_HINTS = {
+      demand_anticipation: "Where demand will be",
+      idle_time_optimization: "Wait vs move",
+      earnings_strategy: "Log in / accept / skip",
+      parking_safety: "Legal spots, avoid fines",
+      fatigue_monitoring: "Break nudges",
+      multi_app_arbitrage: "Which app to use",
+      explainable_coach: "Explains every rec",
+    };
+
+    function setLoading(loading) {
+      if (loading) {
+        cardsEl.innerHTML = '<div class="loading">Loading</div>';
+      }
+    }
+
+    function formatAgentId(id) {
+      return id.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+    }
+
+    function renderScenarios(list) {
+      if (!list || !list.length) return;
+      scenariosEl.innerHTML = list.map(s => `
+        <button type="button" data-scenario="${escapeHtml(s.id)}" class="${s.id === 'default' ? 'active' : ''}">${escapeHtml(s.label)}</button>
+      `).join("");
+      scenariosEl.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          scenariosEl.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          load(btn.dataset.scenario);
+        });
+      });
+    }
+
+    function renderAgentsStrip(activeAgentIds) {
+      const ids = Object.keys(AGENT_HINTS);
+      agentsStripEl.innerHTML = ids.map(id => `
+        <div class="agent-pill ${activeAgentIds.includes(id) ? 'active' : ''}" title="${escapeHtml(AGENT_HINTS[id])}">
+          <span class="name">${formatAgentId(id)}</span>
+          <span class="hint">${escapeHtml(AGENT_HINTS[id])}</span>
+        </div>
+      `).join("");
+    }
+
+    function renderContext(data) {
+      const c = data.context;
+      contextStripEl.innerHTML = `
+        <div class="item"><span class="label">Time</span><span class="value">${c.time_short}</span></div>
+        <div class="item"><span class="label">Date</span><span class="value">${c.date_short}</span></div>
+        <div class="item"><span class="dot ${c.on_ride ? 'on-ride' : 'idle'}"></span><span class="value">${c.on_ride ? 'On ride' : 'Idle'}</span></div>
+        <div class="item"><span class="label">App</span><span class="value">${(c.current_app || 'idle').toUpperCase()}</span></div>
+        <div class="item"><span class="label">Driving</span><span class="value">${c.driving_mins} min</span></div>
+        <div class="item"><span class="label">Rides today</span><span class="value">${c.rides_today}</span></div>
+        <div class="item"><span class="label">Weather</span><span class="value">${c.weather}</span></div>
+        <div class="item"><span class="label">Traffic</span><span class="value">${c.traffic_level}</span></div>
+        <div class="item"><span class="label">Location</span><span class="value">${c.location_label}</span></div>
+      `;
+    }
+
+    function renderRecommendations(list) {
+      let activeIds = list && list.length ? [...new Set(list.map(r => r.agent_id))] : [];
+      if (activeIds.length && !activeIds.includes("explainable_coach")) activeIds.push("explainable_coach");
+      renderAgentsStrip(activeIds);
+      if (!list || list.length === 0) {
+        cardsEl.innerHTML = '<div class="empty-state">No recommendations above confidence threshold for this scenario.</div>';
+        return;
+      }
+      cardsEl.innerHTML = list.map(r => `
+        <article class="card">
+          <div class="card-header">
+            <span class="agent-badge">${formatAgentId(r.agent_id)}</span>
+            <span class="type-badge">${r.type}</span>
+            <span class="confidence">${Math.round(r.confidence * 100)}%</span>
+          </div>
+          <h3>${escapeHtml(r.title)}</h3>
+          <p class="description">${escapeHtml(r.description)}</p>
+          ${r.explanation ? `<div class="explanation">${escapeHtml(r.explanation)}</div>` : ''}
+          <div class="confidence-bar"><span class="fill" style="width:${Math.round(r.confidence * 100)}%"></span></div>
+        </article>
+      `).join("");
+    }
+
+    function escapeHtml(s) {
+      const div = document.createElement("div");
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    async function load(scenario) {
+      setLoading(true);
+      try {
+        const res = await fetch(`${API}/api/recommend?scenario=${encodeURIComponent(scenario)}`);
+        const data = await res.json();
+        renderContext(data);
+        renderRecommendations(data.recommendations);
+      } catch (e) {
+        cardsEl.innerHTML = `<div class="empty-state">Could not load recommendations. Is the server running?<br><small>${escapeHtml(e.message)}</small></div>`;
+        renderAgentsStrip([]);
+      }
+    }
+
+    (async function init() {
+      try {
+        const res = await fetch(`${API}/api/scenarios`);
+        const data = await res.json();
+        renderScenarios(data.scenarios || []);
+      } catch (_) {
+        renderScenarios([
+          { id: "default", label: "Default" },
+          { id: "fatigue", label: "Fatigue" },
+          { id: "multi_app", label: "Multi-app" },
+          { id: "rain_event", label: "Rain + Event" },
+          { id: "morning", label: "Morning" },
+          { id: "skip_ride", label: "Skip ride" },
+          { id: "parking_risk", label: "Parking risk" },
+        ]);
+      }
+      load("default");
+    })();
+  </script>
+</body>
+</html>
